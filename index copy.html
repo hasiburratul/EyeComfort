@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Modifier</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #controls {
+            background-color: #f0f0f0;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        input, button {
+            margin: 5px;
+            padding: 5px;
+        }
+        #preview {
+            flex-grow: 1;
+            border: none;
+            width: 100%;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="controls">
+            <input type="text" id="websiteUrl" placeholder="Enter website URL">
+            <button onclick="loadWebsite()">Load Website</button>
+            <input type="number" id="fontSize" placeholder="Font size (px)" min="8" max="72" value="16">
+            <input type="color" id="fontColor" title="Font color" value="#000000">
+            <input type="color" id="bgColor" title="Background color" value="#FFFFFF">
+            <button onclick="applyChanges()">Apply Changes</button>
+            <button onclick="resetWebsite()">Reset</button>
+        </div>
+        <div id="preview"></div>
+    </div>
+
+    <script>
+        const serverUrl = 'http://localhost:3000';
+        let currentStyles = {
+            fontSize: '16px',
+            fontColor: '#000000',
+            bgColor: '#FFFFFF'
+        };
+        let currentUrl = '';
+
+        function loadWebsite(url) {
+            url = url || document.getElementById('websiteUrl').value;
+            if (url) {
+                currentUrl = url;
+                document.getElementById('websiteUrl').value = url;
+                fetchWebsite(url);
+            } else {
+                alert('Please enter a valid URL');
+            }
+        }
+
+        function fetchWebsite(url) {
+            fetch(`${serverUrl}/fetch-website?url=${encodeURIComponent(url)}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('preview').innerHTML = html;
+                    applyStyles();
+                    addLinkListeners();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load the website. Please try again or try a different URL.');
+                });
+        }
+
+        function addLinkListeners() {
+            const links = document.getElementById('preview').getElementsByTagName('a');
+            for (let link of links) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const newUrl = new URL(this.href, currentUrl).href;
+                    loadWebsite(newUrl);
+                });
+            }
+        }
+
+        function applyChanges() {
+            currentStyles.fontSize = document.getElementById('fontSize').value + 'px';
+            currentStyles.fontColor = document.getElementById('fontColor').value;
+            currentStyles.bgColor = document.getElementById('bgColor').value;
+            applyStyles();
+        }
+
+        function applyStyles() {
+            const styleTag = document.createElement('style');
+            styleTag.textContent = `
+                #preview, #preview * {
+                    font-size: ${currentStyles.fontSize} !important;
+                    color: ${currentStyles.fontColor} !important;
+                }
+                #preview {
+                    background-color: ${currentStyles.bgColor} !important;
+                }
+            `;
+            document.head.appendChild(styleTag);
+        }
+
+        function resetWebsite() {
+            fetch(`${serverUrl}/reset`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('preview').innerHTML = html;
+                    resetStyles();
+                    addLinkListeners();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to reset the website. Please try reloading the page.');
+                });
+        }
+
+        function resetStyles() {
+            currentStyles = {
+                fontSize: '16px',
+                fontColor: '#000000',
+                bgColor: '#FFFFFF'
+            };
+            document.getElementById('fontSize').value = 16;
+            document.getElementById('fontColor').value = '#000000';
+            document.getElementById('bgColor').value = '#FFFFFF';
+            const existingStyle = document.head.querySelector('style');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+        }
+    </script>
+</body>
+</html>
