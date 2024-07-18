@@ -70,7 +70,7 @@ function findEyes() {
 
 function adjustFontSize() {
     if (eyesDistance) {
-        fontSize = Math.round(500 / eyesDistance) * 1.5;
+        fontSize = Math.round(500 / eyesDistance) * 1.25;
         currentStyles.fontSize = `${fontSize}px`;
         document.getElementById('fontSize').value = fontSize;
         applyStyles();
