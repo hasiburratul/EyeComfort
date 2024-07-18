@@ -1,4 +1,4 @@
-const serverUrl = 'http://localhost:3000';
+const serverUrl = 'https://eyecomfort.onrender.com';
 let currentStyles = {
     fontSize: '16px',
     fontColor: '#000000',
